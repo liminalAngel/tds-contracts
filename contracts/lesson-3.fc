@@ -1,0 +1,87 @@
+#include "imports/stdlib.fc";
+
+global int locked?;
+global slice receiver_address;
+global slice admin_address;
+
+const op::send_funds = 0x6f074817;
+const op::lock = 0x878f9b0e;
+const op::unlock = 0x6ae4b0ef;
+
+() save_data() impure inline {
+    set_data(
+        begin_cell()
+            .store_uint(locked?, 1)
+            .store_slice(receiver_address)
+            .store_slice(admin_address)
+        .end_cell()
+    );
+}
+
+() load_data() impure inline {
+    slice ds = get_data().begin_parse();
+    locked? = ds~load_uint(1);
+    receiver_address = ds~load_msg_addr();
+    admin_address = ds~load_msg_addr();
+    ds.end_parse();
+}
+
+() send_empty_message(int amount, slice to, int mode) impure inline_ref {
+    cell msg = begin_cell()
+        .store_uint(0x18, 6)
+        .store_slice(to)
+        .store_coins(amount)
+        .store_uint(0, 107)
+    .end_cell();
+    send_raw_message(msg, mode);
+}
+
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    if (in_msg_body.slice_empty?()) {
+        return ();
+    }
+
+    slice cs = in_msg_full.begin_parse();
+    int flags = cs~load_uint(4);
+    if (flags & 1) {
+        return ();
+    }
+
+    slice sender = cs~load_msg_addr();
+
+    int op = in_msg_body~load_uint(32);
+
+    load_data();
+
+    if (op == op::send_funds) {
+        throw_unless(99, locked? == 0);
+        throw_unless(100, msg_value >= 1000000000);
+        send_empty_message(msg_value, receiver_address, 1);
+        return ();
+    }
+
+    if (op == op::lock) {
+        throw_unless(101, equal_slices(sender, admin_address));
+        locked? = 1;
+        save_data();
+        return ();
+    }
+
+    if (op == op::unlock) {
+        throw_unless(101, equal_slices(sender, admin_address));
+        locked? = 0;
+        save_data();
+        return ();
+    }
+    throw(0xffff);
+}
+
+int get_is_locked() method_id {
+    load_data();
+    return locked?;
+}
+
+slice get_receiver() method_id {
+    load_data();
+    return receiver_address;
+}
