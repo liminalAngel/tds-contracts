@@ -1,0 +1,13 @@
+const int min_tons_for_nft_deploy = 50000000;
+const int min_tons_for_unstake = 15000000;
+const int min_tons_for_destroy = 15000000;
+const int hundred_percent = 1000000000;
+const int seconds_per_day = 86400;
+
+const int workchain = 0;
+slice addr_none() asm "<b 0 2 u, b> <s PUSHSLICE";
+
+() force_chain(slice addr) impure {
+  (int wc, _) = parse_std_addr(addr);
+  throw_unless(333, wc == workchain);
+}

@@ -26,11 +26,11 @@ const op::unlock = 0x6ae4b0ef;
     ds.end_parse();
 }
 
-() send_empty_message(int amount, slice to, int mode) impure inline_ref {
+() send_empty_message(int amount, slice to, int mode) impure inline {
     cell msg = begin_cell()
-        .store_uint(0x18, 6)
+        .store_uint(0x18, 6) 
         .store_slice(to)
-        .store_coins(amount)
+        .store_coins(amount) 
         .store_uint(0, 107)
     .end_cell();
     send_raw_message(msg, mode);

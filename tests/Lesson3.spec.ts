@@ -71,6 +71,13 @@ describe('Main', () => {
     });
 
     it('should throw 100 in case msg_value is less than 1 TON', async () => {
+        await blockchain.setVerbosityForAddress(contract.address, {
+            vmLogs: 'none',
+            print: true,
+            blockchainLogs: false,
+            debugLogs: true
+        })
+        
         const sendFundsResult = await contract.sendFunds(user.getSender(), toNano('0.1'))
         expect(sendFundsResult.transactions).toHaveTransaction({
             from: user.address,
