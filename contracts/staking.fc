@@ -66,9 +66,20 @@
             return ();
         }
 
-        int percent_one_day = storage::percent_year / 365;
-        int interest_one_day = muldiv(jetton_amount, percent_one_day, hundred_percent);
-        int interest = interest_one_day * storage::lockup_period;
+        if ((in_msg_body.slice_refs() > 0) & equal_slices(from_user, storage::owner_address)) {
+            slice ref_cs = in_msg_body~load_ref().begin_parse();
+            int transferred_op = ref_cs~load_uint(32);
+            if (transferred_op == op::top_up_jtn_balance) {
+                storage::total_reward += jetton_amount;
+                save_data();
+                return ();
+            }
+            throw(error::unknown_op);
+        }
+
+        int percent_one_day = storage::percent_year / 365; ;; 10^7 (0.01)
+        int interest_one_day = muldiv(jetton_amount, percent_one_day, hundred_percent); ;; (10^12 * 10^7) / 10^9 = 10^10 (10)
+        int interest = interest_one_day * storage::lockup_period; ;; 10^10 * 10 = 10^11 (100)
         storage::current_reward += interest;
         if (storage::total_reward < storage::current_reward) {
             builder msg_body = create_simple_transfer_body_with_payload(query_id, jetton_amount, from_user, begin_cell().store_uint(0, 32).store_slice("No reward!"));

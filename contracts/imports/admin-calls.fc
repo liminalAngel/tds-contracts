@@ -4,17 +4,5 @@
         save_data();
         return ();
     }
-
-    if (op == op::transfer_notification) {
-        (int jetton_amount, slice from_user) = (in_msg_body~load_coins(), in_msg_body~load_msg_addr());
-        slice ref_cs = in_msg_body~load_ref().begin_parse();
-        int transferred_op = ref_cs~load_uint(32);
-        if (transferred_op == op::top_up_jtn_balance) {
-            storage::total_reward += jetton_amount;
-            save_data();
-            return ();
-        }
-        throw(error::unknown_op);
-    }
     throw(error::unknown_op);
 }
