@@ -8,6 +8,13 @@ export type StakeInfo = {
     stakeSize: bigint;
 }
 
+export type NftData = {
+    index: bigint;
+    collectionAddress: Address;
+    ownerAddress: Address;
+    content: Cell;
+}
+
 export function nftItemConfigToCell(config: NftItemConfig): Cell {
     return beginCell().endCell();
 }
@@ -50,6 +57,17 @@ export class NftItem implements Contract {
             unlockTime: result.readBigNumber(),
             interest: result.readBigNumber(),
             stakeSize: result.readBigNumber()
+        }
+    }
+
+    async getNftData(provider: ContractProvider): Promise<NftData> {
+        const result = (await provider.get('get_nft_data', [])).stack;
+        result.skip(1);
+        return {
+            index: result.readBigNumber(),
+            collectionAddress: result.readAddress(),
+            ownerAddress: result.readAddress(),
+            content: result.readCell()
         }
     }
 }

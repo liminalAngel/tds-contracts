@@ -119,6 +119,9 @@
 
         builder msg_body = create_simple_transfer_body(query_id, stake_size + interest, from_user);
         send_message(0x10, msg_value - min_tons_for_unstake - min_tons_for_destroy, storage::jetton_wallet_address, msg_body.end_cell(), 0);
+        storage::current_reward -= interest;
+        storage::total_reward -= (interest + stake_size);
+        save_data();
         return ();
     }
    
